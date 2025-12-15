@@ -8,6 +8,6 @@
 
 Clone the git repository, with the option `--recurse-submodules` to fetch the submodules:
 
-```
-git clone git@github.com:CMTA/SnapshotEngine.git  --recurse-submodules
+```bash
+git clone git@github.com:CMTA/CMTAT-FIX.git  --recurse-submodules
 ```
