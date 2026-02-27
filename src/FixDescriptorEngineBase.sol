@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import "./interfaces/IFixDescriptorEngine.sol";
-import "./modules/FixDescriptorModule.sol";
-import "./modules/VersionModule.sol";
+import {IFixDescriptor} from "@fixdescriptorkit/contracts/src/IFixDescriptor.sol";
+import {IFixDescriptorEngine} from "./interfaces/IFixDescriptorEngine.sol";
+import {FixDescriptorModule} from "./modules/FixDescriptorModule.sol";
+import {VersionModule} from "./modules/VersionModule.sol";
 
 /**
  * @title FixDescriptorEngineBase

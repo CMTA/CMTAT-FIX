@@ -3,10 +3,8 @@ pragma solidity ^0.8.20;
 
 /* ==== OpenZeppelin === */
 import {Initializable} from "@openzeppelin/contracts/proxy/utils/Initializable.sol";
-/* ==== FixDescriptorKit === */
-import "@fixdescriptorkit/contracts/src/IFixDescriptor.sol";
 /* ==== FixEngine === */
-import "./interfaces/IFixDescriptorEngine.sol";
+import {IFixDescriptorEngine} from "./interfaces/IFixDescriptorEngine.sol";
 
 /**
  * @title FixDescriptorEngineModule

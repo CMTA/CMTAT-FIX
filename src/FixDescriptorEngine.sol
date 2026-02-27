@@ -2,7 +2,8 @@
 pragma solidity ^0.8.20;
 
 import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
-import "./FixDescriptorEngineBase.sol";
+import {IFixDescriptor} from "@fixdescriptorkit/contracts/src/IFixDescriptor.sol";
+import {FixDescriptorEngineBase} from "./FixDescriptorEngineBase.sol";
 
 /**
  * @title FixDescriptorEngine
