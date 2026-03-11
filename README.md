@@ -425,7 +425,7 @@ aderyn -x mocks --output aderyn-report.md
 
 | File | Report | Feedback |
 |------|--------|----------|
-| [`aderyn-report.md`](doc/audit/tools/aderyn-report.md) | 1 High, 5 Low | [`aderyn-report-feedback.md`](doc/audit/tools/aderyn-report-feedback.md) |
+| [`aderyn-report.md`](doc/audit/tools/aderyn-report.md) | 1 High, 4 Low | [`aderyn-report-feedback.md`](doc/audit/tools/aderyn-report-feedback.md) |
 
 **Finding summary:**
 
@@ -433,10 +433,9 @@ aderyn -x mocks --output aderyn-report.md
 |----|-------|-----------------|---------|
 | H-1 | Contract Name Reused in Different Files | High | False Positive |
 | L-1 | Centralization Risk | Low | Valid by Design / Acknowledge |
-| L-2 | Empty Block | Low | False Positive |
-| L-3 | PUSH0 Opcode | Low | Conditional / N/A (Prague target) |
-| L-4 | Unchecked Return | Low | False Positive |
-| L-5 | Unspecific Solidity Pragma | Low | Valid by Design / Acknowledge |
+| L-2 | PUSH0 Opcode | Low | Conditional / N/A (Prague target) |
+| L-3 | Unchecked Return | Low | False Positive |
+| L-4 | Unspecific Solidity Pragma | Low | Valid by Design / Acknowledge |
 
 ### Forge coverage
 

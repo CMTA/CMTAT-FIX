@@ -5,14 +5,13 @@
 | ID | Title | Aderyn Severity | Actual Severity | Verdict |
 |----|-------|-----------------|-----------------|---------|
 | H-1 | Contract Name Reused in Different Files | High | Informational | False Positive |
-| H-2 | Reentrancy: State change after external call | High | Low | Partially Valid — Overstated |
+| H-2 | Reentrancy: State change after external call | High | Low | Partially Valid — CEI fix applied |
 | L-1 | Centralization Risk | Low | Informational | Valid by Design / Acknowledge |
-| L-2 | Unspecific Solidity Pragma | Low | Low | Valid by Design / Acknowledge |
-| L-3 | PUSH0 Opcode | Low | Low | Conditional |
-| L-4 | Empty Block | Low | Informational | False Positive |
-| L-5 | Unchecked Return | Low | Informational | False Positive |
+| L-2 | PUSH0 Opcode | Low | Low | Conditional |
+| L-3 | Unchecked Return | Low | Informational | False Positive |
+| L-4 | Unspecific Solidity Pragma | Low | Low | Valid by Design / Acknowledge |
 
-> Note: The previous L-5 (Unused Import in `CMTATWithFixDescriptor.sol`) has been fixed and is no longer present in the report.
+> Note: Empty Block (previously reported in `CMTATWithFixDescriptor._authorizeSetDescriptorEngine`) has been fixed by adding an explicit comment in the function body so the block is no longer empty; Aderyn no longer reports it. Unused Import was fixed earlier.
 
 ---
 
@@ -84,7 +83,7 @@ The four flagged instances are all intentional access-controlled entry points:
 
 ---
 
-## L-2: Unspecific Solidity Pragma
+## L-4: Unspecific Solidity Pragma
 
 **Aderyn Severity:** Low
 **Actual Severity:** Low
@@ -101,7 +100,7 @@ A fixed version is set in the config file (0.8.34). Users are free to use these 
 
 ---
 
-## L-3: PUSH0 Opcode
+## L-2: PUSH0 Opcode
 
 **Aderyn Severity:** Low
 **Actual Severity:** Low (Conditional)
@@ -116,29 +115,15 @@ A fixed version is set in the config file (0.8.34). Users are free to use these 
 
 ---
 
-## L-4: Empty Block
+## Empty Block (fixed)
 
-**Aderyn Severity:** Low
-**Actual Severity:** Informational / False Positive
+**Previously:** Aderyn reported an empty block in `CMTATWithFixDescriptor._authorizeSetDescriptorEngine()`.
 
-**Assessment:** The flagged function is:
-
-```solidity
-function _authorizeSetDescriptorEngine() internal virtual override onlyRole(DESCRIPTOR_ENGINE_ROLE) {}
-```
-
-This is **not** a meaningless empty block. The function body is intentionally empty because the entire authorization logic is implemented via the `onlyRole(DESCRIPTOR_ENGINE_ROLE)` modifier, which reverts on unauthorized calls. This is a standard OpenZeppelin pattern for authorization hooks.
-
-**Recommendation:** No action required. Aderyn does not account for modifiers when assessing empty function bodies. A NatSpec comment can be added to suppress the warning:
-
-```solidity
-/// @dev Authorization enforced by onlyRole modifier
-function _authorizeSetDescriptorEngine() internal virtual override onlyRole(DESCRIPTOR_ENGINE_ROLE) {}
-```
+**Resolution:** A comment was added inside the function body so the block is no longer empty; Aderyn no longer reports this. Authorization remains enforced by the `onlyRole(DESCRIPTOR_ENGINE_ROLE)` modifier.
 
 ---
 
-## L-5: Unchecked Return
+## L-3: Unchecked Return
 
 **Aderyn Severity:** Low
 **Actual Severity:** Informational / False Positive
@@ -159,4 +144,4 @@ But this adds no safety value.
 
 ## Overall Assessment
 
-The Aderyn report contains **1 valid finding** (L-2), **3 conditionally valid findings** (H-2, L-1, L-3), and **3 false positives** (H-1, L-4, L-5). The severity classification is inflated — neither flagged "High" meets that threshold on this codebase. The most actionable item is fixing the CEI ordering in `setFixDescriptorEngine` (H-2). The previous L-5 (Unused Import) has been resolved.
+The Aderyn report contains **1 valid finding** (L-4 Pragma), **2 conditionally valid findings** (H-2 CEI, L-1 Centralization, L-2 PUSH0), and **2 false positives** (H-1, L-3 Unchecked Return). Empty Block has been fixed. CEI ordering (H-2) and Unused Import have been addressed previously.

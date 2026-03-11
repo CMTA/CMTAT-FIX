@@ -93,8 +93,11 @@ contract CMTATWithFixDescriptor is CMTATBaseRuleEngine, FixDescriptorEngineModul
 
     /**
      * @notice Authorize descriptor engine setting operation
+     * @dev Authorization enforced by onlyRole(DESCRIPTOR_ENGINE_ROLE); body intentionally empty.
      */
-    function _authorizeSetDescriptorEngine() internal virtual override onlyRole(DESCRIPTOR_ENGINE_ROLE) {}
+    function _authorizeSetDescriptorEngine() internal virtual override onlyRole(DESCRIPTOR_ENGINE_ROLE) {
+        // Authorization enforced by modifier above; no additional logic.
+    }
 
     /*//////////////////////////////////////////////////////////////
                         ERC165 SUPPORT
