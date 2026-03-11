@@ -90,6 +90,47 @@ npm install
 forge install
 ```
 
+## Architecture
+
+### CMTATWithFixDescriptor
+
+![surya_inheritance_CMTATWithFixDescriptor.sol](./doc/surya/surya_inheritance/surya_inheritance_CMTATWithFixDescriptor.sol.png)
+
+#### Contracts Description Table
+
+
+|          Contract          |             Type              |                            Bases                             |                |               |
+| :------------------------: | :---------------------------: | :----------------------------------------------------------: | :------------: | :-----------: |
+|             └              |       **Function Name**       |                        **Visibility**                        | **Mutability** | **Modifiers** |
+|                            |                               |                                                              |                |               |
+| **CMTATWithFixDescriptor** |        Implementation         | CMTATBaseRuleEngine, FixDescriptorEngineModule, IFixDescriptor |                |               |
+|             └              |         <Constructor>         |                           Public ❗️                           |       🛑        |      NO❗️      |
+|             └              |       getFixDescriptor        |                          External ❗️                          |                |      NO❗️      |
+|             └              |          getFixRoot           |                          External ❗️                          |                |      NO❗️      |
+|             └              |          verifyField          |                          External ❗️                          |                |      NO❗️      |
+|             └              |        getFixSBEChunk         |                          External ❗️                          |                |      NO❗️      |
+|             └              |      getDescriptorEngine      |                          External ❗️                          |                |      NO❗️      |
+|             └              | _authorizeSetDescriptorEngine |                          Internal 🔒                          |       🛑        |   onlyRole    |
+|             └              |       supportsInterface       |                           Public ❗️                           |                |      NO❗️      |
+|             └              |     setDescriptorWithSBE      |                          External ❗️                          |       🛑        |   onlyRole    |
+|             └              |         setDescriptor         |                          External ❗️                          |       🛑        |   onlyRole    |
+
+
+##### Legend
+
+| Symbol | Meaning                   |
+| :----: | ------------------------- |
+|   🛑    | Function can modify state |
+|   💵    | Function is payable       |
+
+### FixDescriptorEngine
+
+![surya_inheritance_FixDescriptorEngine.sol](./doc/surya/surya_inheritance/surya_inheritance_FixDescriptorEngine.sol.png)
+
+![surya_inheritance_FixDescriptorEngineBase.sol](./doc/surya/surya_inheritance/surya_inheritance_FixDescriptorEngineBase.sol.png)
+
+See more in [./doc/surya](./doc/surya)
+
 ## Usage
 
 ### Basic Integration
