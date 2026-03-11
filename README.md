@@ -17,12 +17,14 @@ CMTAT-FIX extends CMTAT tokens with FIX descriptor capabilities through a dedica
 
 ## Architecture
 
-The project follows CMTAT's modular engine pattern (see [SnapshotEngine](https://github.com/CMTA/SnapshotEngine) for the same layout). The repo is split into:
+The repo is split into an **engine** (reusable for any compliant token) and **CMTAT integration** (module + example token).
 
-The **FixDescriptorEngine** works with **any token** that implements the right interface (`IFixDescriptorEngine` for binding). It is not tied to CMTAT.
+### Engine (reusable)
 
-- **FixDescriptorEngine** / **FixDescriptorEngineBase** – Main engine contracts; one instance per token (in `src/engine/`)
-- **interfaces/IFixDescriptorEngine.sol** – Minimum interface (e.g. `token()`)
+The **FixDescriptorEngine** works with **any token** that implements `IFixDescriptorEngine` (e.g. `token()`); it is not tied to CMTAT. All engine code lives in `src/engine/`:
+
+- **FixDescriptorEngine** / **FixDescriptorEngineBase** – Main contracts; one instance per token
+- **interfaces/IFixDescriptorEngine.sol** – Minimum interface for binding
 - **modules/FixDescriptorModule.sol** – Core descriptor logic (SBE, SSTORE2, Merkle verification)
 - **modules/VersionModule.sol** – Version tracking
 
@@ -38,10 +40,6 @@ The **FixDescriptorEngine** works with **any token** that implements the right i
 - **Gas Efficient**: Uses SSTORE2 for efficient on-chain data storage
 - **Verifiable**: Merkle tree commitments enable cryptographic verification of descriptor fields
 
-## Code style (Foundry lint)
-
-We keep acronyms **SBE** and **CBOR** in identifiers (e.g. `getFixSBEChunk`, `pathCBOR`, `setFixDescriptorWithSBE`) to align with the FixDescriptorKit dependency (`fixSBEPtr`, `fixSBELen`) and with the [Solidity style guide](https://docs.soliditylang.org/en/latest/style-guide.html#naming-conventions): *"When using initialisms in mixedCase, capitalize all the letters of the initialisms"* (e.g. `xmlHTTPRequest`). So `getFixSBEChunk` and `pathCBOR` follow the official convention; Foundry’s mixed-case linter disagrees and is relaxed via `foundry.toml` (see below).
-
 ## Dependencies
 
 - **CMTAT** [v3.2.0](https://github.com/CMTA/CMTAT/releases/tag/v3.2.0) - Core token framework
@@ -50,11 +48,13 @@ We keep acronyms **SBE** and **CBOR** in identifiers (e.g. `getFixSBEChunk`, `pa
 
 ### Foundry configuration
 
-See `foundry.toml`
+See `foundry.toml`:
 
-- Solidity version: [0.8.34](https://www.soliditylang.org/blog/2026/02/18/solidity-0.8.34-release-announcement) 
-
+- Solidity: [0.8.34](https://www.soliditylang.org/blog/2026/02/18/solidity-0.8.34-release-announcement)
 - EVM version: `Prague`
+- Lint:
+    - `asm-keccak256` excluded (use of `keccak256()` is intentional)
+    - We keep SBE & CBOR in identifiers per the [Solidity style guide](https://docs.soliditylang.org/en/latest/style-guide.html#naming-conventions) and the official specs: [SBE](https://www.fixtrading.org/standards/sbe/), [CBOR](https://cbor.io/).
 
 ## Installation
 
@@ -306,10 +306,11 @@ bytes memory chunk = engine.getFixSBEChunk(startOffset, size);
 
 ## Project Structure
 
-The repo separates **Engine** (reusable, any token) from **CMTAT-modified example and module** (per [rya-sge’s review](https://github.com/CMTA/CMTAT-FIX/pull/1#issuecomment-4040028503)).
-
 ```
 CMTAT-FIX/
+├── .github/
+│   └── workflows/
+│       └── lint.yml                      # CI: forge lint (SBE/CBOR findings filtered)
 ├── src/
 │   ├── engine/                           # Engine (reusable; works with any compliant token)
 │   │   ├── FixDescriptorEngine.sol
@@ -424,19 +425,18 @@ aderyn -x mocks --output aderyn-report.md
 
 | File | Report | Feedback |
 |------|--------|----------|
-| [`aderyn-report.md`](doc/audit/tools/aderyn-report.md) | 2 High, 5 Low | [`aderyn-report-feedback.md`](doc/audit/tools/aderyn-report-feedback.md) |
+| [`aderyn-report.md`](doc/audit/tools/aderyn-report.md) | 1 High, 5 Low | [`aderyn-report-feedback.md`](doc/audit/tools/aderyn-report-feedback.md) |
 
 **Finding summary:**
 
 | ID | Title | Aderyn Severity | Verdict |
 |----|-------|-----------------|---------|
 | H-1 | Contract Name Reused in Different Files | High | False Positive |
-| H-2 | Reentrancy: State change after external call | High | Low — CEI, require privileged caller. |
 | L-1 | Centralization Risk | Low | Valid by Design / Acknowledge |
-| L-2 | Unspecific Solidity Pragma | Low | Valid by Design / Acknowledge |
+| L-2 | Empty Block | Low | False Positive |
 | L-3 | PUSH0 Opcode | Low | Conditional / N/A (Prague target) |
-| L-4 | Empty Block | Low | False Positive |
-| L-5 | Unchecked Return | Low | False Positive |
+| L-4 | Unchecked Return | Low | False Positive |
+| L-5 | Unspecific Solidity Pragma | Low | Valid by Design / Acknowledge |
 
 ### Forge coverage
 
