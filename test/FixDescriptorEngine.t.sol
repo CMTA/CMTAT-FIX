@@ -2,7 +2,7 @@
 pragma solidity ^0.8.20;
 
 import {Test} from "forge-std/Test.sol";
-import {FixDescriptorEngine} from "../src/FixDescriptorEngine.sol";
+import {FixDescriptorEngine} from "../src/engine/FixDescriptorEngine.sol";
 import {IFixDescriptor} from "@fixdescriptorkit/contracts/src/IFixDescriptor.sol";
 
 /**

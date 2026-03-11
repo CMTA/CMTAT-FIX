@@ -17,34 +17,19 @@ CMTAT-FIX extends CMTAT tokens with FIX descriptor capabilities through a dedica
 
 ## Architecture
 
-The project follows CMTAT's modular engine pattern:
+The project follows CMTAT's modular engine pattern (see [SnapshotEngine](https://github.com/CMTA/SnapshotEngine) for the same layout). The repo is split into:
 
-### Components
+The **FixDescriptorEngine** works with **any token** that implements the right interface (`IFixDescriptorEngine` for binding). It is not tied to CMTAT.
 
-1. **FixDescriptorEngine** - Main engine contract bound to a single token
-   - Manages descriptor storage and verification
-   - Implements `IFixDescriptor` interface
-   - Uses `AccessControlEnumerable` for permission management with role member enumeration
+- **FixDescriptorEngine** / **FixDescriptorEngineBase** – Main engine contracts; one instance per token (in `src/engine/`)
+- **interfaces/IFixDescriptorEngine.sol** – Minimum interface (e.g. `token()`)
+- **modules/FixDescriptorModule.sol** – Core descriptor logic (SBE, SSTORE2, Merkle verification)
+- **modules/VersionModule.sol** – Version tracking
 
-2. **FixDescriptorEngineBase** - Abstract base for engine mechanics
-   - Exposes public/external API (`getFixDescriptor`, `setFixDescriptor`, etc.)
-   - Delegates authorization to hook functions implemented by subclasses
-   - Inherits `FixDescriptorModule` and `VersionModule`
+### CMTAT integration
 
-3. **FixDescriptorEngineModule** - CMTAT module for token integration
-   - Provides standard way to reference a FixDescriptorEngine
-   - Uses ERC-7201 namespaced storage
-   - Stores engine address in token contract
-
-4. **FixDescriptorModule** - Core descriptor management logic
-   - Handles SBE data deployment via SSTORE2
-   - Manages descriptor storage and retrieval
-   - Provides Merkle proof verification
-
-5. **CMTATWithFixDescriptor** - Example token implementation
-   - Demonstrates integration pattern
-   - Forwards `IFixDescriptor` calls to bound engine
-   - Provides convenience functions for descriptor management
+- **FixDescriptorEngineModule** (`src/`) – CMTAT module that plugs the engine into a CMTAT token (ERC-7201 storage, engine reference); reusable by any CMTAT token
+- **CMTATWithFixDescriptor** (`src/example/`) – Example CMTAT token using the module; forwards `IFixDescriptor` to the bound engine
 
 ### Design Principles
 
@@ -52,6 +37,10 @@ The project follows CMTAT's modular engine pattern:
 - **Modular Architecture**: Engine can be attached/detached from tokens via module system
 - **Gas Efficient**: Uses SSTORE2 for efficient on-chain data storage
 - **Verifiable**: Merkle tree commitments enable cryptographic verification of descriptor fields
+
+## Code style (Foundry lint)
+
+We keep acronyms **SBE** and **CBOR** in identifiers (e.g. `getFixSBEChunk`, `pathCBOR`, `setFixDescriptorWithSBE`) to align with the FixDescriptorKit dependency (`fixSBEPtr`, `fixSBELen`) and with the [Solidity style guide](https://docs.soliditylang.org/en/latest/style-guide.html#naming-conventions): *"When using initialisms in mixedCase, capitalize all the letters of the initialisms"* (e.g. `xmlHTTPRequest`). So `getFixSBEChunk` and `pathCBOR` follow the official convention; Foundry’s mixed-case linter disagrees and is relaxed via `foundry.toml` (see below).
 
 ## Dependencies
 
@@ -317,30 +306,33 @@ bytes memory chunk = engine.getFixSBEChunk(startOffset, size);
 
 ## Project Structure
 
+The repo separates **Engine** (reusable, any token) from **CMTAT-modified example and module** (per [rya-sge’s review](https://github.com/CMTA/CMTAT-FIX/pull/1#issuecomment-4040028503)).
+
 ```
 CMTAT-FIX/
 ├── src/
-│   ├── FixDescriptorEngine.sol          # Main engine contract
-│   ├── FixDescriptorEngineBase.sol       # Abstract base with public API and auth hooks
-│   ├── FixDescriptorEngineModule.sol     # CMTAT module for integration
-│   ├── interfaces/
-│   │   └── IFixDescriptorEngine.sol      # Engine interface
-│   ├── modules/
-│   │   ├── FixDescriptorModule.sol       # Core descriptor logic
-│   │   └── VersionModule.sol             # Version tracking
-│   └── examples/
-│       └── CMTATWithFixDescriptor.sol    # Example token implementation
+│   ├── engine/                           # Engine (reusable; works with any compliant token)
+│   │   ├── FixDescriptorEngine.sol
+│   │   ├── FixDescriptorEngineBase.sol
+│   │   ├── interfaces/
+│   │   │   └── IFixDescriptorEngine.sol
+│   │   └── modules/
+│   │       ├── FixDescriptorModule.sol
+│   │       └── VersionModule.sol
+│   ├── FixDescriptorEngineModule.sol     # CMTAT module (reusable)
+│   └── example/                          # Example CMTAT token using the module
+│       └── CMTATWithFixDescriptor.sol
 ├── lib/
 │   └── CMTAT/                            # CMTAT submodule
 ├── test/
-│   ├── CMTATWithFixDescriptor.t.sol      # Token integration tests
-│   ├── FixDescriptorEngine.t.sol         # Engine unit tests
-│   ├── FixDescriptorEngineBase.t.sol     # Engine base unit tests
-│   └── FixDescriptorEngineModule.t.sol   # Module unit tests
+│   ├── CMTATWithFixDescriptor.t.sol
+│   ├── FixDescriptorEngine.t.sol
+│   ├── FixDescriptorEngineBase.t.sol
+│   └── FixDescriptorEngineModule.t.sol
 ├── scripts/
-│   └── DeployCMTATWithFixDescriptor.s.sol # Deployment script
-├── foundry.toml                          # Foundry configuration
-└── package.json                          # npm dependencies
+│   └── DeployCMTATWithFixDescriptor.s.sol
+├── foundry.toml
+└── package.json
 ```
 
 ## Testing

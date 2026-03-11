@@ -1,9 +1,9 @@
-// SPDX-License-Identifier: MPL-2.0
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import {IFixDescriptor} from "@fixdescriptorkit/contracts/src/IFixDescriptor.sol";
-import {FixDescriptorLib} from "@fixdescriptorkit/contracts/src/FixDescriptorLib.sol";
-import {SSTORE2} from "@fixdescriptorkit/contracts/src/SSTORE2.sol";
+import "@fixdescriptorkit/contracts/src/IFixDescriptor.sol";
+import "@fixdescriptorkit/contracts/src/FixDescriptorLib.sol";
+import "@fixdescriptorkit/contracts/src/SSTORE2.sol";
 
 /**
  * @title FixDescriptorModule

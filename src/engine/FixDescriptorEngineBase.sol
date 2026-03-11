@@ -1,10 +1,9 @@
-// SPDX-License-Identifier: MPL-2.0
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import {IFixDescriptor} from "@fixdescriptorkit/contracts/src/IFixDescriptor.sol";
-import {IFixDescriptorEngine} from "./interfaces/IFixDescriptorEngine.sol";
-import {FixDescriptorModule} from "./modules/FixDescriptorModule.sol";
-import {VersionModule} from "./modules/VersionModule.sol";
+import "./interfaces/IFixDescriptorEngine.sol";
+import "./modules/FixDescriptorModule.sol";
+import "./modules/VersionModule.sol";
 
 /**
  * @title FixDescriptorEngineBase
@@ -13,7 +12,7 @@ import {VersionModule} from "./modules/VersionModule.sol";
  */
 abstract contract FixDescriptorEngineBase is IFixDescriptorEngine, FixDescriptorModule, VersionModule {
     /// @notice The token this engine is bound to.
-    address public immutable token;
+    address internal immutable TOKEN;
 
     /**
      * @notice Constructor
@@ -23,7 +22,7 @@ abstract contract FixDescriptorEngineBase is IFixDescriptorEngine, FixDescriptor
      */
     constructor(address token_, bytes memory sbeData_, IFixDescriptor.FixDescriptor memory descriptor_) {
         require(token_ != address(0), "FixDescriptorEngine: Invalid token address");
-        token = token_;
+        TOKEN = token_;
 
         if (sbeData_.length > 0 && descriptor_.fixRoot != bytes32(0)) {
             _initializeDescriptorFromConstructor(sbeData_, descriptor_);
@@ -47,6 +46,14 @@ abstract contract FixDescriptorEngineBase is IFixDescriptorEngine, FixDescriptor
     function getFixRoot() external view returns (bytes32 root) {
         IFixDescriptor.FixDescriptor memory descriptor = _getDescriptor();
         return descriptor.fixRoot;
+    }
+
+    /**
+     * @notice Returns the address of the token this engine is bound to
+     * @return The address of the token this engine is bound to
+     */
+    function token() external view returns (address) {
+        return TOKEN;
     }
 
     /**

@@ -3,12 +3,12 @@ pragma solidity ^0.8.20;
 
 import {Test} from "forge-std/Test.sol";
 import {FixDescriptorEngineModule} from "../src/FixDescriptorEngineModule.sol";
-import {FixDescriptorEngine} from "../src/FixDescriptorEngine.sol";
+import {FixDescriptorEngine} from "../src/engine/FixDescriptorEngine.sol";
 import {IFixDescriptor} from "@fixdescriptorkit/contracts/src/IFixDescriptor.sol";
 
 contract MockFixDescriptorEngineModule is FixDescriptorEngineModule {
     function initialize(address engine_) external initializer {
-        __FixDescriptorEngineModule_init_unchained(engine_);
+        __fixDescriptorEngineModuleInitUnchained(engine_);
     }
 
     function _authorizeSetDescriptorEngine() internal override {}

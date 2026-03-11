@@ -2,8 +2,8 @@
 pragma solidity ^0.8.20;
 
 import {Test} from "forge-std/Test.sol";
-import {CMTATWithFixDescriptor} from "../src/examples/CMTATWithFixDescriptor.sol";
-import {FixDescriptorEngine} from "../src/FixDescriptorEngine.sol";
+import {CMTATWithFixDescriptor} from "../src/example/CMTATWithFixDescriptor.sol";
+import {FixDescriptorEngine} from "../src/engine/FixDescriptorEngine.sol";
 import {CMTATBaseRuleEngine} from "CMTAT/contracts/modules/2_CMTATBaseRuleEngine.sol";
 import {ICMTATConstructor} from "CMTAT/contracts/interfaces/technical/ICMTATConstructor.sol";
 import {IERC1643CMTAT} from "CMTAT/contracts/interfaces/tokenization/draft-IERC1643CMTAT.sol";

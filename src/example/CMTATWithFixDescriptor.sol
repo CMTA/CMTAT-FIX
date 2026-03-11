@@ -1,11 +1,12 @@
-// SPDX-License-Identifier: MPL-2.0
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
 /* ==== CMTAT === */
 import {CMTATBaseRuleEngine} from "CMTAT/contracts/modules/2_CMTATBaseRuleEngine.sol";
 /* ==== FixEngine === */
 import {FixDescriptorEngineModule} from "../FixDescriptorEngineModule.sol";
-import {FixDescriptorEngine} from "../FixDescriptorEngine.sol";
+import {IFixDescriptorEngine} from "../engine/interfaces/IFixDescriptorEngine.sol";
+import {FixDescriptorEngine} from "../engine/FixDescriptorEngine.sol";
 /* ==== FixDescriptorKit === */
 import {IFixDescriptor} from "@fixdescriptorkit/contracts/src/IFixDescriptor.sol";
 
