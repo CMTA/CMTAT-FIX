@@ -5,7 +5,6 @@ pragma solidity ^0.8.20;
 import {CMTATBaseRuleEngine} from "CMTAT/contracts/modules/2_CMTATBaseRuleEngine.sol";
 /* ==== FixEngine === */
 import {FixDescriptorEngineModule} from "../FixDescriptorEngineModule.sol";
-import {IFixDescriptorEngine} from "../interfaces/IFixDescriptorEngine.sol";
 import {FixDescriptorEngine} from "../FixDescriptorEngine.sol";
 /* ==== FixDescriptorKit === */
 import {IFixDescriptor} from "@fixdescriptorkit/contracts/src/IFixDescriptor.sol";
