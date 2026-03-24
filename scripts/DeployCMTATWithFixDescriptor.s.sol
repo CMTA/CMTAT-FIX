@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 import "forge-std/Script.sol";
 import "../src/engine/FixDescriptorEngine.sol";
-import "../src/example/CMTATWithFixDescriptor.sol";
+import "../src/CMTAT/CMTATWithFixDescriptor.sol";
 import "../lib/CMTAT/contracts/interfaces/technical/ICMTATConstructor.sol";
 import "../lib/CMTAT/contracts/interfaces/tokenization/draft-IERC1643CMTAT.sol";
 import "../lib/CMTAT/contracts/interfaces/engine/IRuleEngine.sol";

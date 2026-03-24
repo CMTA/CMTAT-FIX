@@ -63,7 +63,7 @@ The **FixDescriptorEngine** works with **any token** that implements `IFixDescri
 ### CMTAT integration
 
 - **FixDescriptorEngineModule** (`src/`) – CMTAT module that plugs the engine into a CMTAT token (ERC-7201 storage, engine reference); reusable by any CMTAT token
-- **CMTATWithFixDescriptor** (`src/example/`) – Example CMTAT token using the module; forwards `IFixDescriptor` to the bound engine
+- **CMTATWithFixDescriptor** (`src/CMTAT/`) – Example CMTAT token using the module; forwards `IFixDescriptor` to the bound engine
 
 ### Design Principles
 
@@ -353,7 +353,7 @@ CMTAT-FIX/
 │   │       ├── FixDescriptorModule.sol
 │   │       └── VersionModule.sol
 │   ├── FixDescriptorEngineModule.sol     # CMTAT module (reusable)
-│   └── example/                          # Example CMTAT token using the module
+│   └── CMTAT/                            # Example CMTAT token using the module
 │       └── CMTATWithFixDescriptor.sol
 ├── lib/
 │   └── CMTAT/                            # CMTAT submodule
@@ -406,6 +406,12 @@ Set environment variables:
 - **DESCRIPTOR_ADMIN_ROLE** (on engine): Can set/update descriptors
 - **DESCRIPTOR_ENGINE_ROLE** (on token): Can set the engine address
 - **DEFAULT_ADMIN_ROLE** (on engine): Has all roles
+
+### Role Resolution Behavior
+
+- `FixDescriptorEngine.hasRole(...)` is overridden so any account with `DEFAULT_ADMIN_ROLE` is treated as having every role (including `DESCRIPTOR_ADMIN_ROLE`), even if not explicitly granted.
+- `getRoleMember(...)` / `getRoleMemberCount(...)` from `AccessControlEnumerable` still report only explicitly granted members for each role.
+- Operationally: role enumeration may omit default admins unless they are also explicitly granted that role.
 
 ### Permission Flow
 
