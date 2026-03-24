@@ -407,6 +407,12 @@ Set environment variables:
 - **DESCRIPTOR_ENGINE_ROLE** (on token): Can set the engine address
 - **DEFAULT_ADMIN_ROLE** (on engine): Has all roles
 
+### Role Resolution Behavior
+
+- `FixDescriptorEngine.hasRole(...)` is overridden so any account with `DEFAULT_ADMIN_ROLE` is treated as having every role (including `DESCRIPTOR_ADMIN_ROLE`), even if not explicitly granted.
+- `getRoleMember(...)` / `getRoleMemberCount(...)` from `AccessControlEnumerable` still report only explicitly granted members for each role.
+- Operationally: role enumeration may omit default admins unless they are also explicitly granted that role.
+
 ### Permission Flow
 
 1. Token caller authorized by token policy sets engine address (`DESCRIPTOR_ENGINE_ROLE` path)
