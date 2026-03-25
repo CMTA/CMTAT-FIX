@@ -1,6 +1,10 @@
 # CMTAT-FIX
 
-Integration of FIX descriptor support for [CMTAT](https://github.com/CMTA/CMTAT) (The Capital Markets and Technology Association Token) contracts. This repository provides a modular engine system that enables CMTAT tokens to store, manage, and verify FIX (Financial Information eXchange) protocol descriptors on-chain.
+> This project has not undergone an audit and is provided as-is without any warranties.
+
+Integration of FIX descriptor support for [CMTAT](https://github.com/CMTA/CMTAT) (The Capital Markets and Technology Association Token) contracts. 
+
+This repository provides a modular engine system that enables CMTAT tokens to store, manage, and verify FIX (Financial Information eXchange) protocol descriptors on-chain.
 
 This project was initially developed by [Nethermind](https://nethermind.io/) in collaboration with [CMTA](https://cmta.ch/) and [Taurus](https://www.taurushq.com/).
 
@@ -43,13 +47,43 @@ Details (canonicalization, SBE encoding, Merkle rules, verification) are in the 
 | **fixRoot** | Merkle root committing to all descriptor fields; stored onchain. |
 | **Merkle proof** | Sibling hashes proving a (path, value) leaf under the stored fixRoot. |
 
-## Security Notice
-
-⚠️ **WARNING**: The contracts in this repository are **unaudited** and should be used with caution. They have not undergone formal security audits. Use at your own risk.
-
 ## Architecture
 
 The repo is split into an **engine** (reusable for any compliant token) and **CMTAT integration** (module + example token).
+
+### Project structure
+
+```
+CMTAT-FIX/
+├── .github/
+│   └── workflows/
+│       └── lint.yml                      # CI: forge lint (SBE/CBOR findings filtered)
+├── src/
+│   ├── engine/                           # Engine (reusable; works with any compliant token)
+│   │   ├── FixDescriptorEngine.sol
+│   │   ├── FixDescriptorEngineBase.sol
+│   │   ├── interfaces/
+│   │   │   └── IFixDescriptorEngine.sol
+│   │   └── modules/
+│   │       ├── FixDescriptorModule.sol
+│   │       └── VersionModule.sol
+│   ├── FixDescriptorEngineModule.sol     # CMTAT module (reusable)
+│   └── CMTAT/                            # Example CMTAT token using the module
+│       └── CMTATWithFixDescriptor.sol
+├── lib/
+│   └── CMTAT/                            # CMTAT submodule
+├── test/
+│   ├── CMTATWithFixDescriptor.t.sol
+│   ├── FixDescriptorEngine.t.sol
+│   ├── FixDescriptorEngineBase.t.sol
+│   └── FixDescriptorEngineModule.t.sol
+├── scripts/
+│   └── DeployCMTATWithFixDescriptor.s.sol
+├── foundry.toml
+└── package.json
+```
+
+
 
 ### Engine (reusable)
 
@@ -157,80 +191,6 @@ forge install
 
 See more in [./doc/surya](./doc/surya)
 
-## API Reference
-
-### FixDescriptorEngine
-
-Main engine contract. One instance is bound to one token at construction time. Inherits `FixDescriptorEngineBase`, `AccessControlEnumerable`.
-
-#### State Variables
-
-| Name | Type | Description |
-|------|------|-------------|
-| `token` | `address` (immutable) | Address of the token this engine is bound to |
-| `DESCRIPTOR_ADMIN_ROLE` | `bytes32` (constant) | Role required to set/update descriptors |
-
-#### Functions
-
-| Function | Signature | Access | Description |
-|----------|-----------|--------|-------------|
-| `constructor` | `(address token_, address admin, bytes sbeData_, FixDescriptor descriptor_)` | — | Binds engine to `token_`, grants `DEFAULT_ADMIN_ROLE` to `admin`. Optionally initializes descriptor from `sbeData_` / `descriptor_`. |
-| `hasRole` | `(bytes32 role, address account) → bool` | public view | Override: `DEFAULT_ADMIN_ROLE` holders implicitly hold all roles. |
-| `getFixDescriptor` | `() → FixDescriptor` | external view | Returns the stored FIX descriptor struct. |
-| `getFixRoot` | `() → bytes32` | external view | Returns the Merkle root commitment of the descriptor. |
-| `verifyField` | `(bytes pathCBOR, bytes value, bytes32[] proof, bool[] directions) → bool` | external view | Verifies a single FIX field value against the committed Merkle root. |
-| `getFixSBEChunk` | `(uint256 start, uint256 size) → bytes` | external view | Reads a chunk of SBE-encoded data from SSTORE2 storage. |
-| `setFixDescriptor` | `(FixDescriptor descriptor)` | external | Sets/updates the descriptor. Requires `DESCRIPTOR_ADMIN_ROLE` or caller is the bound token. |
-| `setFixDescriptorWithSBE` | `(bytes sbeData, FixDescriptor descriptor) → address sbePtr` | external | Deploys SBE data via SSTORE2 and atomically updates the descriptor. Returns the deployed data contract address. Requires `DESCRIPTOR_ADMIN_ROLE` or caller is the bound token. |
-| `version` | `() → string` | external pure | Returns the version string (e.g. `"1.0.0"`). |
-| `getRoleMemberCount` | `(bytes32 role) → uint256` | public view | Returns the number of accounts with `role`. Inherited from `AccessControlEnumerable`. |
-| `getRoleMember` | `(bytes32 role, uint256 index) → address` | public view | Returns the account at position `index` in the role's member set. Inherited from `AccessControlEnumerable`. |
-
----
-
-### FixDescriptorEngineModule
-
-CMTAT module that stores a reference to a `FixDescriptorEngine` on the token contract. Uses ERC-7201 namespaced storage.
-
-#### State Variables
-
-| Name | Type | Description |
-|------|------|-------------|
-| `DESCRIPTOR_ENGINE_ROLE` | `bytes32` (constant) | Role required to set the engine address on the token |
-
-#### Functions
-
-| Function | Signature | Access | Description |
-|----------|-----------|--------|-------------|
-| `setFixDescriptorEngine` | `(address engine)` | external | Sets the engine address. Verifies the engine is bound to this token (`engine.token() == address(this)`). Authorization is implementation-defined via `_authorizeSetDescriptorEngine()`. |
-| `getDescriptorEngine` | `() → address` | external view | Returns the stored engine address, or `address(0)` if not set. |
-| `fixDescriptorEngine` | `() → address` | public view | Alias for `getDescriptorEngine`. Used internally by `CMTATWithFixDescriptor`. |
-
----
-
-### CMTATWithFixDescriptor
-
-Example token implementation combining `CMTATBaseRuleEngine` with `FixDescriptorEngineModule`. All `IFixDescriptor` calls are forwarded to the bound engine.
-
-#### State Variables
-
-| Name | Type | Description |
-|------|------|-------------|
-| `DESCRIPTOR_ADMIN_ROLE` | `bytes32` (constant) | Role required to call descriptor write helpers on the token |
-
-#### Functions
-
-| Function | Signature | Access | Description |
-|----------|-----------|--------|-------------|
-| `getFixDescriptor` | `() → FixDescriptor` | external view | Forwarded to `FixDescriptorEngine.getFixDescriptor()`. Reverts if engine is not set. |
-| `getFixRoot` | `() → bytes32` | external view | Forwarded to `FixDescriptorEngine.getFixRoot()`. Reverts if engine is not set. |
-| `verifyField` | `(bytes pathCBOR, bytes value, bytes32[] proof, bool[] directions) → bool` | external view | Forwarded to `FixDescriptorEngine.verifyField()`. Reverts if engine is not set. |
-| `getFixSBEChunk` | `(uint256 start, uint256 size) → bytes` | external view | Forwarded to `FixDescriptorEngine.getFixSBEChunk()`. Reverts if engine is not set. |
-| `getDescriptorEngine` | `() → address` | external view | Returns the engine address (overrides both `FixDescriptorEngineModule` and `IFixDescriptor`). |
-| `setDescriptorWithSBE` | `(bytes sbeData, FixDescriptor descriptor) → address sbePtr` | external | Convenience helper: calls `engine.setFixDescriptorWithSBE()`. Requires `DESCRIPTOR_ADMIN_ROLE`. |
-| `setDescriptor` | `(FixDescriptor descriptor)` | external | Convenience helper: calls `engine.setFixDescriptor()`. Requires `DESCRIPTOR_ADMIN_ROLE`. |
-| `supportsInterface` | `(bytes4 interfaceId) → bool` | public view | ERC-165 support. Returns `true` for `IFixDescriptor` in addition to inherited interfaces. |
-
 ## Usage
 
 ### Basic Integration
@@ -336,38 +296,6 @@ engine.setFixDescriptorWithSBE(newSbeData, newDescriptor);
 bytes memory chunk = engine.getFixSBEChunk(startOffset, size);
 ```
 
-## Project Structure
-
-```
-CMTAT-FIX/
-├── .github/
-│   └── workflows/
-│       └── lint.yml                      # CI: forge lint (SBE/CBOR findings filtered)
-├── src/
-│   ├── engine/                           # Engine (reusable; works with any compliant token)
-│   │   ├── FixDescriptorEngine.sol
-│   │   ├── FixDescriptorEngineBase.sol
-│   │   ├── interfaces/
-│   │   │   └── IFixDescriptorEngine.sol
-│   │   └── modules/
-│   │       ├── FixDescriptorModule.sol
-│   │       └── VersionModule.sol
-│   ├── FixDescriptorEngineModule.sol     # CMTAT module (reusable)
-│   └── CMTAT/                            # Example CMTAT token using the module
-│       └── CMTATWithFixDescriptor.sol
-├── lib/
-│   └── CMTAT/                            # CMTAT submodule
-├── test/
-│   ├── CMTATWithFixDescriptor.t.sol
-│   ├── FixDescriptorEngine.t.sol
-│   ├── FixDescriptorEngineBase.t.sol
-│   └── FixDescriptorEngineModule.t.sol
-├── scripts/
-│   └── DeployCMTATWithFixDescriptor.s.sol
-├── foundry.toml
-└── package.json
-```
-
 ## Testing
 
 Run the test suite using Foundry:
@@ -382,6 +310,14 @@ forge test -vvv
 # Run specific test file
 forge test --match-path test/CMTATWithFixDescriptor.t.sol
 ```
+
+### Coverage
+
+```bash
+forge coverage --no-match-coverage "(script|mocks|test)" --report lcov && genhtml lcov.info --branch-coverage --output-dir coverage
+```
+
+See [Solidity Coverage in VS Code with Foundry](https://mirror.xyz/devanon.eth/RrDvKPnlD-pmpuW7hQeR5wWdVjklrpOgPCOA-PJkWFU) & [Foundry forge coverage](https://www.rareskills.io/post/foundry-forge-coverage)
 
 ## Deployment
 
@@ -399,26 +335,6 @@ Set environment variables:
 - `ADMIN_ADDRESS` - Admin address for roles
 - `TOKEN_ADDRESS` - Deployed token/proxy address to bind the engine to
 
-## Access Control
-
-### Roles
-
-- **DESCRIPTOR_ADMIN_ROLE** (on engine): Can set/update descriptors
-- **DESCRIPTOR_ENGINE_ROLE** (on token): Can set the engine address
-- **DEFAULT_ADMIN_ROLE** (on engine): Has all roles
-
-### Role Resolution Behavior
-
-- `FixDescriptorEngine.hasRole(...)` is overridden so any account with `DEFAULT_ADMIN_ROLE` is treated as having every role (including `DESCRIPTOR_ADMIN_ROLE`), even if not explicitly granted.
-- `getRoleMember(...)` / `getRoleMemberCount(...)` from `AccessControlEnumerable` still report only explicitly granted members for each role.
-- Operationally: role enumeration may omit default admins unless they are also explicitly granted that role.
-
-### Permission Flow
-
-1. Token caller authorized by token policy sets engine address (`DESCRIPTOR_ENGINE_ROLE` path)
-2. Engine writes are allowed for `DESCRIPTOR_ADMIN_ROLE` and the bound token caller
-3. Default admin on engine has all permissions
-
 ## Interface Compliance
 
 The system implements the `IFixDescriptor` interface from `@fixdescriptorkit/contracts`, providing:
@@ -428,20 +344,42 @@ The system implements the `IFixDescriptor` interface from `@fixdescriptorkit/con
 - `verifyField()` - Verify field values with Merkle proofs
 - `getDescriptorEngine()` - Get engine address
 
-## Security Considerations
+## Security
+
+> Warning: this project has not been audited
+
+### Access Control
+
+#### Roles
+
+- **DESCRIPTOR_ADMIN_ROLE** (on engine): Can set/update descriptors
+- **DESCRIPTOR_ENGINE_ROLE** (on token): Can set the engine address
+- **DEFAULT_ADMIN_ROLE** (on engine): Has all roles
+
+#### Role Resolution Behavior
+
+- `FixDescriptorEngine.hasRole(...)` is overridden so any account with `DEFAULT_ADMIN_ROLE` is treated as having every role (including `DESCRIPTOR_ADMIN_ROLE`), even if not explicitly granted.
+- `getRoleMember(...)` / `getRoleMemberCount(...)` from `AccessControlEnumerable` still report only explicitly granted members for each role.
+- Operationally: role enumeration may omit default admins unless they are also explicitly granted that role.
+
+#### Permission Flow
+
+1. Token caller authorized by token policy sets engine address (`DESCRIPTOR_ENGINE_ROLE` path)
+2. Engine writes are allowed for `DESCRIPTOR_ADMIN_ROLE` and the bound token caller
+3. Default admin on engine has all permissions
+
+### Security considerations
 
 - Engine is bound to token at construction (immutable)
 - Descriptor updates are authorized for `DESCRIPTOR_ADMIN_ROLE` and the bound token caller
 - Merkle proofs enable cryptographic verification without revealing full descriptor
 - SSTORE2 pattern ensures efficient and secure data storage
 
-## Audit
+### Audit
 
-### Tools
+#### Tools
 
-
-
-#### Slither
+##### Slither
 
 Report performed with [Slither](https://github.com/crytic/slither):
 
@@ -451,9 +389,9 @@ slither .  --checklist --filter-paths "openzeppelin-contracts|test|CMTAT|forge-s
 
 | File | Report | Feedback |
 |------|--------|----------|
-| [`slither-report.md`](doc/audit/tools/slither-report.md) | No findings captured | - |
+| [`slither-report.md`](./doc/audit/tools/slither-report.md) | No findings captured | - |
 
-#### Aderyn
+##### Aderyn
 
 Report performed with [Aderyn](https://github.com/Cyfrin/aderyn):
 
@@ -463,7 +401,7 @@ aderyn -x mocks --output aderyn-report.md
 
 | File | Report | Feedback |
 |------|--------|----------|
-| [`aderyn-report.md`](doc/audit/tools/aderyn-report.md) | 1 High, 4 Low | [`aderyn-report-feedback.md`](doc/audit/tools/aderyn-report-feedback.md) |
+| [`aderyn-report.md`](doc/audit/tools/aderyn-report.md) | 1 High, 4 Low | [`aderyn-report-feedback.md`](./doc/audit/tools/aderyn-report-feedback.md) |
 
 **Finding summary:**
 
@@ -475,13 +413,79 @@ aderyn -x mocks --output aderyn-report.md
 | L-3 | Unchecked Return | Low | False Positive |
 | L-4 | Unspecific Solidity Pragma | Low | Valid by Design / Acknowledge |
 
-### Forge coverage
+## API Reference
 
-```bash
-forge coverage --no-match-coverage "(script|mocks|test)" --report lcov && genhtml lcov.info --branch-coverage --output-dir coverage
-```
+### FixDescriptorEngine
 
-See [Solidity Coverage in VS Code with Foundry](https://mirror.xyz/devanon.eth/RrDvKPnlD-pmpuW7hQeR5wWdVjklrpOgPCOA-PJkWFU) & [Foundry forge coverage](https://www.rareskills.io/post/foundry-forge-coverage)
+Main engine contract. One instance is bound to one token at construction time. Inherits `FixDescriptorEngineBase`, `AccessControlEnumerable`.
+
+#### State Variables
+
+| Name                    | Type                  | Description                                  |
+| ----------------------- | --------------------- | -------------------------------------------- |
+| `token`                 | `address` (immutable) | Address of the token this engine is bound to |
+| `DESCRIPTOR_ADMIN_ROLE` | `bytes32` (constant)  | Role required to set/update descriptors      |
+
+#### Functions
+
+| Function                  | Signature                                                    | Access        | Description                                                  |
+| ------------------------- | ------------------------------------------------------------ | ------------- | ------------------------------------------------------------ |
+| `constructor`             | `(address token_, address admin, bytes sbeData_, FixDescriptor descriptor_)` | —             | Binds engine to `token_`, grants `DEFAULT_ADMIN_ROLE` to `admin`. Optionally initializes descriptor from `sbeData_` / `descriptor_`. |
+| `hasRole`                 | `(bytes32 role, address account) → bool`                     | public view   | Override: `DEFAULT_ADMIN_ROLE` holders implicitly hold all roles. |
+| `getFixDescriptor`        | `() → FixDescriptor`                                         | external view | Returns the stored FIX descriptor struct.                    |
+| `getFixRoot`              | `() → bytes32`                                               | external view | Returns the Merkle root commitment of the descriptor.        |
+| `verifyField`             | `(bytes pathCBOR, bytes value, bytes32[] proof, bool[] directions) → bool` | external view | Verifies a single FIX field value against the committed Merkle root. |
+| `getFixSBEChunk`          | `(uint256 start, uint256 size) → bytes`                      | external view | Reads a chunk of SBE-encoded data from SSTORE2 storage.      |
+| `setFixDescriptor`        | `(FixDescriptor descriptor)`                                 | external      | Sets/updates the descriptor. Requires `DESCRIPTOR_ADMIN_ROLE` or caller is the bound token. |
+| `setFixDescriptorWithSBE` | `(bytes sbeData, FixDescriptor descriptor) → address sbePtr` | external      | Deploys SBE data via SSTORE2 and atomically updates the descriptor. Returns the deployed data contract address. Requires `DESCRIPTOR_ADMIN_ROLE` or caller is the bound token. |
+| `version`                 | `() → string`                                                | external pure | Returns the version string (e.g. `"1.0.0"`).                 |
+| `getRoleMemberCount`      | `(bytes32 role) → uint256`                                   | public view   | Returns the number of accounts with `role`. Inherited from `AccessControlEnumerable`. |
+| `getRoleMember`           | `(bytes32 role, uint256 index) → address`                    | public view   | Returns the account at position `index` in the role's member set. Inherited from `AccessControlEnumerable`. |
+
+---
+
+### FixDescriptorEngineModule
+
+CMTAT module that stores a reference to a `FixDescriptorEngine` on the token contract. Uses ERC-7201 namespaced storage.
+
+#### State Variables
+
+| Name                     | Type                 | Description                                          |
+| ------------------------ | -------------------- | ---------------------------------------------------- |
+| `DESCRIPTOR_ENGINE_ROLE` | `bytes32` (constant) | Role required to set the engine address on the token |
+
+#### Functions
+
+| Function                 | Signature          | Access        | Description                                                  |
+| ------------------------ | ------------------ | ------------- | ------------------------------------------------------------ |
+| `setFixDescriptorEngine` | `(address engine)` | external      | Sets the engine address. Verifies the engine is bound to this token (`engine.token() == address(this)`). Authorization is implementation-defined via `_authorizeSetDescriptorEngine()`. |
+| `getDescriptorEngine`    | `() → address`     | external view | Returns the stored engine address, or `address(0)` if not set. |
+| `fixDescriptorEngine`    | `() → address`     | public view   | Alias for `getDescriptorEngine`. Used internally by `CMTATWithFixDescriptor`. |
+
+---
+
+### CMTATWithFixDescriptor
+
+Example token implementation combining `CMTATBaseRuleEngine` with `FixDescriptorEngineModule`. All `IFixDescriptor` calls are forwarded to the bound engine.
+
+#### State Variables
+
+| Name                    | Type                 | Description                                                 |
+| ----------------------- | -------------------- | ----------------------------------------------------------- |
+| `DESCRIPTOR_ADMIN_ROLE` | `bytes32` (constant) | Role required to call descriptor write helpers on the token |
+
+#### Functions
+
+| Function               | Signature                                                    | Access        | Description                                                  |
+| ---------------------- | ------------------------------------------------------------ | ------------- | ------------------------------------------------------------ |
+| `getFixDescriptor`     | `() → FixDescriptor`                                         | external view | Forwarded to `FixDescriptorEngine.getFixDescriptor()`. Reverts if engine is not set. |
+| `getFixRoot`           | `() → bytes32`                                               | external view | Forwarded to `FixDescriptorEngine.getFixRoot()`. Reverts if engine is not set. |
+| `verifyField`          | `(bytes pathCBOR, bytes value, bytes32[] proof, bool[] directions) → bool` | external view | Forwarded to `FixDescriptorEngine.verifyField()`. Reverts if engine is not set. |
+| `getFixSBEChunk`       | `(uint256 start, uint256 size) → bytes`                      | external view | Forwarded to `FixDescriptorEngine.getFixSBEChunk()`. Reverts if engine is not set. |
+| `getDescriptorEngine`  | `() → address`                                               | external view | Returns the engine address (overrides both `FixDescriptorEngineModule` and `IFixDescriptor`). |
+| `setDescriptorWithSBE` | `(bytes sbeData, FixDescriptor descriptor) → address sbePtr` | external      | Convenience helper: calls `engine.setFixDescriptorWithSBE()`. Requires `DESCRIPTOR_ADMIN_ROLE`. |
+| `setDescriptor`        | `(FixDescriptor descriptor)`                                 | external      | Convenience helper: calls `engine.setFixDescriptor()`. Requires `DESCRIPTOR_ADMIN_ROLE`. |
+| `supportsInterface`    | `(bytes4 interfaceId) → bool`                                | public view   | ERC-165 support. Returns `true` for `IFixDescriptor` in addition to inherited interfaces. |
 
 ## License
 
@@ -498,6 +502,6 @@ Contributions are welcome! Please ensure:
 ## References
 
 - [FIX Descriptor Specification](https://fixdescriptor.vercel.app/spec) – Canonicalization, SBE encoding, Merkle commitment, onchain verification
-- [CMTAT Documentation](https://github.com/CMTA/CMTAT)
+- [CMTAT Solidity](https://github.com/CMTA/CMTAT)
 - [FIX Protocol](https://www.fixtrading.org/)
 - [FixDescriptorKit](https://github.com/NethermindEth/fix-descriptor)
