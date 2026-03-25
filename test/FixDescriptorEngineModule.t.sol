@@ -17,6 +17,7 @@ contract MockFixDescriptorEngineModule is FixDescriptorEngineModule {
 contract FixDescriptorEngineModuleTest is Test {
     MockFixDescriptorEngineModule public module;
     address public admin;
+    event FixDescriptorEngineSet(address indexed engine);
 
     function _emptyDescriptor() internal pure returns (IFixDescriptor.FixDescriptor memory descriptor) {
         descriptor = IFixDescriptor.FixDescriptor({
@@ -36,6 +37,8 @@ contract FixDescriptorEngineModuleTest is Test {
         module = new MockFixDescriptorEngineModule();
         FixDescriptorEngine engine = new FixDescriptorEngine(address(module), admin, "", _emptyDescriptor());
 
+        vm.expectEmit(true, false, false, true);
+        emit FixDescriptorEngineSet(address(engine));
         module.initialize(address(engine));
 
         assertEq(module.fixDescriptorEngine(), address(engine), "Initializer should set bound engine");

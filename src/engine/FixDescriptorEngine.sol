@@ -44,14 +44,14 @@ contract FixDescriptorEngine is FixDescriptorEngineBase, AccessControlEnumerable
 
     function _authorizeSetFixDescriptor() internal virtual override {
         require(
-            msg.sender == this.token() || hasRole(DESCRIPTOR_ADMIN_ROLE, msg.sender),
+            msg.sender == TOKEN || hasRole(DESCRIPTOR_ADMIN_ROLE, msg.sender),
             "FixDescriptorEngine: Missing descriptor admin role"
         );
     }
 
     function _authorizeSetFixDescriptorWithSBE() internal virtual override {
         require(
-            msg.sender == this.token() || hasRole(DESCRIPTOR_ADMIN_ROLE, msg.sender),
+            msg.sender == TOKEN || hasRole(DESCRIPTOR_ADMIN_ROLE, msg.sender),
             "FixDescriptorEngine: Missing descriptor admin role"
         );
     }
