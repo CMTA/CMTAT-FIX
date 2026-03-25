@@ -30,7 +30,8 @@ abstract contract FixDescriptorEngineModule is Initializable {
 
     /**
      * @notice Initialize the FixDescriptorEngineModule
-     * @dev Should be called during CMTAT initialization
+     * @dev Optional internal hook for integrators who want to bind an engine during token initialization.
+     *      Default deployment flow can leave this unset and call `setFixDescriptorEngine` later.
      * @param engine_ Address of the FixDescriptorEngine contract (can be address(0))
      */
     function __fixDescriptorEngineModuleInitUnchained(address engine_) internal virtual onlyInitializing {
@@ -41,6 +42,7 @@ abstract contract FixDescriptorEngineModule is Initializable {
                 IFixDescriptorEngine(engine_).token() == address(this),
                 "FixDescriptorEngineModule: Engine not bound to this CMTAT"
             );
+            emit FixDescriptorEngineSet(engine_);
         }
     }
 

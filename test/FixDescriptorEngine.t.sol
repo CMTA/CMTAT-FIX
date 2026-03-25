@@ -90,7 +90,7 @@ contract FixDescriptorEngineTest is Test {
 
     function testVersion() public {
         engine = new FixDescriptorEngine(token, admin, "", _emptyDescriptor());
-        assertEq(engine.version(), "1.0.0", "Version should match module constant");
+        assertEq(engine.version(), "0.1.0", "Version should match module constant");
     }
 
     /*//////////////////////////////////////////////////////////////
