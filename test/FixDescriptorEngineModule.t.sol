@@ -17,6 +17,7 @@ contract MockFixDescriptorEngineModule is FixDescriptorEngineModule {
 contract FixDescriptorEngineModuleTest is Test {
     MockFixDescriptorEngineModule public module;
     address public admin;
+    event FixDescriptorEngineSet(address indexed engine);
 
     function _emptyDescriptor() internal pure returns (IFixDescriptor.FixDescriptor memory descriptor) {
         descriptor = IFixDescriptor.FixDescriptor({
@@ -32,10 +33,28 @@ contract FixDescriptorEngineModuleTest is Test {
         admin = vm.addr(1);
     }
 
+    /// @dev Must match `FIX_DESCRIPTOR_ENGINE_MODULE_STORAGE_LOCATION` (ERC-7201 comment in module).
+    function testErc7201StorageSlotMatchesFormula() public pure {
+        bytes32 computed = bytes32(
+            uint256(
+                keccak256(
+                    abi.encode(uint256(keccak256("CMTAT.storage.FixDescriptorEngineModule")) - 1)
+                )
+            ) & ~uint256(0xff)
+        );
+        assertEq(
+            computed,
+            0xa53cb59b6022663116b97fd8896a8d8c96544a6d32d4ec30cfa96e5d8df7e300,
+            "ERC-7201 slot must match CMTAT.storage.FixDescriptorEngineModule formula"
+        );
+    }
+
     function testInitializerSetsEngineWhenBoundToToken() public {
         module = new MockFixDescriptorEngineModule();
         FixDescriptorEngine engine = new FixDescriptorEngine(address(module), admin, "", _emptyDescriptor());
 
+        vm.expectEmit(true, false, false, true);
+        emit FixDescriptorEngineSet(address(engine));
         module.initialize(address(engine));
 
         assertEq(module.fixDescriptorEngine(), address(engine), "Initializer should set bound engine");

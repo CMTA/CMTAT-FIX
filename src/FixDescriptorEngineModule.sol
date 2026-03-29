@@ -15,7 +15,7 @@ abstract contract FixDescriptorEngineModule is Initializable {
     /* ============ ERC-7201 ============ */
     // keccak256(abi.encode(uint256(keccak256("CMTAT.storage.FixDescriptorEngineModule")) - 1)) & ~bytes32(uint256(0xff))
     bytes32 private constant FIX_DESCRIPTOR_ENGINE_MODULE_STORAGE_LOCATION =
-        0xc09aa28957960c2b82e3fad477567fe122f23bca69560181151331ec7041c600;
+        0xa53cb59b6022663116b97fd8896a8d8c96544a6d32d4ec30cfa96e5d8df7e300;
 
     /* ==== ERC-7201 State Variables === */
     struct FixDescriptorEngineModuleStorage {
@@ -30,7 +30,8 @@ abstract contract FixDescriptorEngineModule is Initializable {
 
     /**
      * @notice Initialize the FixDescriptorEngineModule
-     * @dev Should be called during CMTAT initialization
+     * @dev Optional internal hook for integrators who want to bind an engine during token initialization.
+     *      Default deployment flow can leave this unset and call `setFixDescriptorEngine` later.
      * @param engine_ Address of the FixDescriptorEngine contract (can be address(0))
      */
     function __fixDescriptorEngineModuleInitUnchained(address engine_) internal virtual onlyInitializing {
@@ -41,6 +42,7 @@ abstract contract FixDescriptorEngineModule is Initializable {
                 IFixDescriptorEngine(engine_).token() == address(this),
                 "FixDescriptorEngineModule: Engine not bound to this CMTAT"
             );
+            emit FixDescriptorEngineSet(engine_);
         }
     }
 

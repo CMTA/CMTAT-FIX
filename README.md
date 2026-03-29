@@ -102,7 +102,7 @@ The **FixDescriptorEngine** works with **any token** that implements `IFixDescri
 ### Design Principles
 
 - **One Engine Per Token**: Each `FixDescriptorEngine` instance is bound to a single token at construction
-- **Modular Architecture**: Engine can be attached/detached from tokens via module system
+- **Modular Architecture**: Engine is bound via the module (`setFixDescriptorEngine`); it can be **set or replaced**, not cleared back to `address(0)` once bound
 - **Gas Efficient**: Uses SSTORE2 for efficient on-chain data storage
 - **Verifiable**: Merkle tree commitments enable cryptographic verification of descriptor fields
 
@@ -255,6 +255,8 @@ engine.setFixDescriptorWithSBE(sbeData, descriptor);
 token.setFixDescriptorEngine(address(engine));
 ```
 
+By design, the default deployment flow links the descriptor engine in a separate step (post-`initialize`). This mirrors the CMTAT approach for other optional engines and keeps deployment standardized. Integrators that require atomic binding can call `__fixDescriptorEngineModuleInitUnchained(...)` from a custom initializer.
+
 #### 4. Query Descriptor Information
 
 ```solidity
@@ -402,6 +404,15 @@ aderyn -x mocks --output aderyn-report.md
 | File | Report | Feedback |
 |------|--------|----------|
 | [`aderyn-report.md`](doc/audit/tools/aderyn-report.md) | 1 High, 4 Low | [`aderyn-report-feedback.md`](./doc/audit/tools/aderyn-report-feedback.md) |
+
+#### Nethermind Audit Agent
+
+Automated scans (AI-generated; not a substitute for a full manual audit).
+
+| File | Report | Feedback |
+|------|--------|----------|
+| [`audit_agent_report_v0.2.0.pdf`](doc/audit/tools/nethermind-audit-agent/audit_agent_report_v0.2.0.pdf) | 1 Low, 2 Info | [`audit_agent_report_v0.2.0-feedback.md`](doc/audit/tools/nethermind-audit-agent/audit_agent_report_v0.2.0-feedback.md) |
+| [`audit_agent_report_v0.1.0.pdf`](doc/audit/tools/nethermind-audit-agent/audit_agent_report_v0.1.0.pdf) | 1 Info, 2 Best Practices | [`audit_agent_report_v0.1.0-feedback.md`](doc/audit/tools/nethermind-audit-agent/audit_agent_report_v0.1.0-feedback.md) |
 
 **Finding summary:**
 

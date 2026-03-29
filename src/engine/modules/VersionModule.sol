@@ -8,7 +8,7 @@ pragma solidity ^0.8.20;
  */
 abstract contract VersionModule {
     /// @notice Version string
-    string public constant VERSION = "0.1.0";
+    string public constant VERSION = "0.2.0";
 
     /**
      * @notice Get the version of the engine
